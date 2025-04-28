@@ -1,5 +1,6 @@
 package com.example.quick_hire.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -38,6 +39,7 @@ public class User {
     @Column(nullable = false)
     @NotNull(message = "Password cannot be null")
     @Size(min = 8, message = "Password should be at least 8 characters long")
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(nullable = false)
