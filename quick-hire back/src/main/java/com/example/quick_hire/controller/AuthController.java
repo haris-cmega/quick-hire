@@ -1,37 +1,51 @@
+// src/main/java/com/example/quick_hire/controller/AuthController.java
 package com.example.quick_hire.controller;
 
-import com.example.quick_hire.model.LoginRequest;
+import com.example.quick_hire.dto.UserLoginDTO;
+import com.example.quick_hire.dto.UserRegistrationDTO;
+import com.example.quick_hire.dto.UserResponseDTO;
+import com.example.quick_hire.mapper.UserMapper;
 import com.example.quick_hire.model.User;
-import com.example.quick_hire.repository.UserRepository;
-import org.springframework.http.HttpStatus;
+import com.example.quick_hire.service.impl.AuthServiceImpl;
+import com.example.quick_hire.service.impl.RefreshTokenServiceImpl;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserRepository userRepo;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthServiceImpl    authService;
+    private final RefreshTokenServiceImpl refreshService;
 
-    public AuthController(UserRepository userRepo,
-                          PasswordEncoder passwordEncoder) {
-        this.userRepo = userRepo;
-        this.passwordEncoder = passwordEncoder;
+    public AuthController(AuthServiceImpl authService,
+                          RefreshTokenServiceImpl refreshService) {
+        this.authService   = authService;
+        this.refreshService = refreshService;
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserResponseDTO> register(
+            @RequestBody @Valid UserRegistrationDTO dto) {
+        User u = authService.register(dto);
+        return ResponseEntity.ok(UserMapper.toUserResponseDTO(u));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest req) {
-        Optional<User> userOpt = userRepo.findByUsername(req.getUsername());
-        if (userOpt.isEmpty()
-                || !passwordEncoder.matches(req.getPassword(), userOpt.get().getPassword())) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid credentials");
-        }
-        return ResponseEntity.ok("Login successful");
+    public ResponseEntity<Map<String,String>> login(
+            @RequestBody @Valid UserLoginDTO dto) {
+        Map<String,String> tokens = authService.authenticate(dto);
+        return ResponseEntity.ok(tokens);
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<Map<String,String>> refresh(
+            @RequestBody Map<String,String> body) {
+        String rt = body.get("refreshToken");
+        String token = authService.refreshToken(rt);
+        return ResponseEntity.ok(Map.of("token", token));
     }
 }

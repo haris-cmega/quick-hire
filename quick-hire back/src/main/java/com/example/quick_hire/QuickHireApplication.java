@@ -7,7 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class QuickHireApplication {
 
 	public static void main(String[] args) {
+
 		SpringApplication.run(QuickHireApplication.class, args);
+		System.out.println("Elsa queen <3");
 	}
 
 }

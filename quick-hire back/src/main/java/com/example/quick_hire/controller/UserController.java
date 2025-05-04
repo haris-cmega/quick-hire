@@ -1,16 +1,20 @@
+// src/main/java/com/example/quick_hire/controller/UserController.java
 package com.example.quick_hire.controller;
 
+import com.example.quick_hire.dto.UserRegistrationDTO;
+import com.example.quick_hire.dto.UserResponseDTO;
 import com.example.quick_hire.model.User;
+import com.example.quick_hire.mapper.UserMapper;
 import com.example.quick_hire.service.UserService;
-import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
@@ -20,43 +24,38 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User createdUser = userService.createUser(user);
-        return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable long id, @RequestBody User user) {
-        user.setId(id);
-        User updatedUser = userService.updateUser(user);
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    public ResponseEntity<UserResponseDTO> createUser(@RequestBody @Valid UserRegistrationDTO userRegistrationDTO) {
+        User createdUser = userService.createUser(userRegistrationDTO);
+        UserResponseDTO responseDTO = UserMapper.toUserResponseDTO(createdUser);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable long id) {
-        Optional<User> theUser = userService.getUserById(id);
-
-        if (theUser.isPresent()) {
-            return new ResponseEntity<>(theUser.get(), HttpStatus.FOUND);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUserById(@PathVariable long id) {
-        userService.deleteUserById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<UserResponseDTO> getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        UserResponseDTO responseDTO = UserMapper.toUserResponseDTO(user);
+        return ResponseEntity.ok(responseDTO);
     }
 
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<List<UserResponseDTO>> getAllUsers() {
         List<User> users = userService.getAllUsers();
-        if (users.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(users, HttpStatus.OK);
-        }
+        List<UserResponseDTO> responseDTOs = users.stream()
+                .map(UserMapper::toUserResponseDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(responseDTOs);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> updateUser(@PathVariable Long id, @RequestBody @Valid UserRegistrationDTO userRegistrationDTO) {
+        User updatedUser = userService.updateUser(id, userRegistrationDTO);
+        UserResponseDTO responseDTO = UserMapper.toUserResponseDTO(updatedUser);
+        return ResponseEntity.ok(responseDTO);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
 }
