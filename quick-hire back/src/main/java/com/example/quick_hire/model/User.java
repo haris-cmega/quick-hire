@@ -1,74 +1,50 @@
+// src/main/java/com/example/quick_hire/model/User.java
 package com.example.quick_hire.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.example.quick_hire.enums.UserRole;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Objects;
+import java.util.Collection;
+import java.util.List;
 
+/**
+ * User entity for the Quick-Hire platform.
+ */
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    @NotNull(message = "Name cannot be null")
-    @Size(min = 1, max = 100, message = "Name should be between 1 and 100 characters")
-    private String name;
-
-    @Column(name = "last_name", nullable = false, length = 100)
-    @NotNull(message = "Last name cannot be null")
-    @Size(min = 1, max = 100, message = "Last name should be between 1 and 100 characters")
-    private String lastName;
-
     @Column(nullable = false, unique = true)
-    @NotNull(message = "Username cannot be null")
-    @Size(min = 3, max = 100, message = "Username should be between 3 and 100 characters")
     private String username;
 
     @Column(nullable = false, unique = true)
-    @NotNull(message = "Email cannot be null")
-    @Email(message = "Email should be valid")
     private String email;
 
     @Column(nullable = false)
-    @NotNull(message = "Password cannot be null")
-    @Size(min = 8, message = "Password should be at least 8 characters long")
-    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @Column(nullable = false)
-    @NotNull(message = "Role cannot be null")
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false,
+            columnDefinition = "ENUM('CLIENT','FREELANCER','ADMIN') DEFAULT 'CLIENT'")
+    private UserRole role;
 
 
+    public User() {}
+
+    // Getters and setters
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
     }
 
     public String getUsername() {
@@ -87,6 +63,7 @@ public class User {
         this.email = email;
     }
 
+    @Override
     public String getPassword() {
         return password;
     }
@@ -95,36 +72,37 @@ public class User {
         this.password = password;
     }
 
-    public String getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserRole role) {
         this.role = role;
     }
 
-    public User(Long id, String name, String lastName, String username, String email, String password, String role) {
-        this.id = id;
-        this.name = name;
-        this.lastName = lastName;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.role = role;
-    }
-
-    public User() {}
-
+    // UserDetails methods
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(id, user.id) && Objects.equals(name, user.name) && Objects.equals(lastName, user.lastName) && Objects.equals(username, user.username) && Objects.equals(email, user.email) && Objects.equals(password, user.password) && Objects.equals(role, user.role);
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id, name, lastName, username, email, password, role);
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }
