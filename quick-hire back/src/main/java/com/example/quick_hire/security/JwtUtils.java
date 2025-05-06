@@ -1,13 +1,10 @@
-// src/main/java/com/example/quick_hire/security/JwtUtils.java
 package com.example.quick_hire.security;
 
 import com.example.quick_hire.model.User;
 import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import jakarta.annotation.PostConstruct;
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
@@ -17,15 +14,17 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Utility for generating and validating JWT access & refresh tokens.
- */
 @Component
 public class JwtUtils {
 
-    @Value("${jwt.secret}")            private String jwtSecret;
-    @Value("${jwt.expirationMs}")      private long jwtExpirationMs;
-    @Value("${jwt.refreshExpirationMs}") private long refreshExpirationMs;
+    @Value("${jwt.secret}")
+    private String jwtSecret;
+
+    @Value("${jwt.expirationMs}")
+    private long jwtExpirationMs;
+
+    @Value("${jwt.refreshExpirationMs}")
+    private long refreshExpirationMs;
 
     private Key key;
 
@@ -35,15 +34,15 @@ public class JwtUtils {
     }
 
     public String generateAccessToken(User user) {
-        Map<String, Object> claims = Map.of(
-                "userId",   user.getId(),
-                "email",    user.getEmail(),
-                "role",     user.getRole().name()
-        );
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("username", user.getUsername());
+        claims.put("email", user.getEmail());
+        claims.put("role", user.getRole().name());
 
         return Jwts.builder()
-                .setSubject(user.getUsername())
                 .setClaims(claims)
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key)
@@ -51,13 +50,12 @@ public class JwtUtils {
     }
 
     public String generateRefreshToken(User user) {
-        Map<String, Object> claims = Map.of(
-                "role", user.getRole().name()
-        );
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());
 
         return Jwts.builder()
-                .setSubject(user.getUsername())
                 .setClaims(claims)
+                .setSubject(user.getUsername())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + refreshExpirationMs))
                 .signWith(key)
