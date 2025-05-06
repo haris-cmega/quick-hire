@@ -59,6 +59,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,   "/api/jobs").hasRole("CLIENT")
                         .requestMatchers(HttpMethod.PUT,    "/api/jobs/**").hasRole("CLIENT")
                         .requestMatchers(HttpMethod.DELETE, "/api/jobs/**").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.POST, "/api/proposals").hasRole("FREELANCER")
+                        .requestMatchers(HttpMethod.POST,   "/api/jobs/*/proposals").hasRole("FREELANCER")
+                        .requestMatchers(HttpMethod.GET,    "/api/jobs/*/proposals").hasRole("CLIENT")
+                        .requestMatchers(HttpMethod.GET,    "/api/proposals").hasRole("FREELANCER")
+                        .requestMatchers(HttpMethod.PATCH,  "/api/proposals/*").hasRole("CLIENT")
                         // any authenticated user may view
                         .requestMatchers(HttpMethod.GET,    "/api/jobs/**").authenticated()
                         // everything else must be authenticated
