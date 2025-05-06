@@ -41,11 +41,23 @@ public class AuthController {
         return ResponseEntity.ok(tokens);
     }
 
+//    @PostMapping("/refresh-token")
+//    public ResponseEntity<Map<String,String>> refresh(
+//            @RequestBody Map<String,String> body) {
+//        String rt = body.get("refreshToken");
+//
+//        String token = authService.refreshToken(rt);
+//        return ResponseEntity.ok(Map.of("token", token));
+//    }
+
     @PostMapping("/refresh-token")
-    public ResponseEntity<Map<String,String>> refresh(
-            @RequestBody Map<String,String> body) {
-        String rt = body.get("refreshToken");
-        String token = authService.refreshToken(rt);
-        return ResponseEntity.ok(Map.of("token", token));
+    public ResponseEntity<Map<String, String>> refreshToken(@RequestBody Map<String, String> request) {
+        String refreshToken = request.get("refresh_token");
+        try {
+            String token = authService.refreshToken(refreshToken);
+            return ResponseEntity.ok(Map.of("token", token));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
     }
 }
